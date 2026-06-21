@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>교회학교 중앙연회연합회 공문 관리 시스템</title>
+    <style>
+        :root {
+            --primary-green: #0A6E38;
+            --light-bg: #EAF4EE;
+            --text-black: #000000;
+            --border-green: #0A6E38;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 제어 바 스타일 */
+        .control-bar {
+            background: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            width: 100%;
+            max-width: 850px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background-color: var(--primary-green); color: white; }
+        .btn-primary:hover { background-color: #064b26; }
+        .btn-success { background-color: #2E7D32; color: white; }
+        .btn-success:hover { background-color: #1B5E20; }
+        .btn-secondary { background-color: #0288D1; color: white; }
+        .btn-secondary:hover { background-color: #01579B; }
+        .btn-dark { background-color: #4A5568; color: white; }
+        .btn-dark:hover { background-color: #2D3748; }
+        .btn-danger { background-color: #d32f2f; color: white; }
+        .btn-danger:hover { background-color: #b71c1c; }
+
+        .status-badge {
+            width: 100%;
+            margin-top: 5px;
+            font-size: 13px;
+            color: var(--primary-green);
+            background: #E8F5E9;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        /* 문서 기본 레이아웃 */
+        .document-page {
+            background: white;
+            width: 100%;
+            max-width: 850px;
+            min-height: 1100px;
+            padding: 40px 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-motto {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-green);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 헤더 테이블 */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-top: 3px solid var(--border-green);
+            border-bottom: 1px solid var(--border-green);
+            margin-bottom: 6px;
+        }
+
+        .logo-cell {
+            width: 100px;
+            border-right: 1px solid #c2dfcc;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+        }
+
+        .custom-logo-img {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .custom-logo-img:not([src]), .custom-logo-img[src=""] { opacity: 0; }
+        .custom-seal-img:not([src]), .custom-seal-img[src=""] { opacity: 0; }
+
+        .title-info-cell {
+            padding: 6px 0 6px 12px;
+        }
+
+        .title-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .church-badge {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--text-black);
+            line-height: 1.4;
+            text-align: center;
+            margin-right: 15px;
+            border: none;
+            padding: 0;
+        }
+
+        .main-org-title {
+            font-size: 25px;
+            font-weight: 800;
+            color: #000;
+            letter-spacing: 4px;
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .meta-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+        }
+        .meta-info-table td {
+            padding: 2px 0;
+            color: #111;
+        }
+        .meta-label {
+            font-weight: bold;
+            color: var(--primary-green);
+            width: 45px;
+        }
+        .meta-value {
+            width: 220px;
+        }
+
+        /* 역대회장단 바 */
+        .past-presidents-bar {
+            border: 1px solid #b2dbbf;
+            background-color: #f2faf5;
+            padding: 5px 10px;
+            font-size: 11.5px;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        /* 본문 틀 크기 조정 */
+        .main-container {
+            display: flex;
+            flex-grow: 1;
+            border: 1px solid var(--border-green);
+        }
+
+        /* 좌측 사이드바 */
+        .sidebar-zone {
+            width: 195px;
+            border-right: 1px solid var(--border-green);
+            background-color: #f4faf6;
+            padding: 6px 4px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+       
+        .sidebar-table td {
+            padding: 3px 2px;
+            font-size: 12px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .sidebar-table .pos-label {
+            color: var(--primary-green);
+            font-weight: bold;
+            text-align: center;
+            width: 75px;
+            border-right: 1px solid #c2dfcc;
+            padding-right: 4px;
+        }
+
+        .sidebar-table .name-value {
+            color: var(--text-black);
+            text-align: center;
+            font-weight: 500;
+            padding-left: 6px;
+        }
+
+        .sidebar-section-title {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-green);
+            padding: 8px 0 4px 0;
+            font-size: 12px;
+            letter-spacing: 3px;
+            background-color: #e3f0e8;
+            margin: 4px 0;
+        }
+
+        /* 우측 본문 서식 */
+        .content-zone {
+            flex-grow: 1;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .doc-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13.5px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .info-line {
+            margin-bottom: 8px;
+            font-size: 14px;
+            display: flex;
+        }
+        .info-line .lbl {
+            font-weight: bold;
+            min-width: 50px;
+        }
+        .info-line .val {
+            flex-grow: 1;
+        }
+
+        .subject-line {
+            display: flex;
+            margin-bottom: 25px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #000;
+            font-size: 14px;
+        }
+
+        .letter-body {
+            font-size: 14px;
+            line-height: 1.75;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+        .body-para {
+            margin-bottom: 15px;
+        }
+
+        .agenda-box {
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        .agenda-header {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 12px;
+            letter-spacing: 5px;
+        }
+        .agenda-row {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            text-indent: -20px;
+        }
+        .agenda-sub-row {
+            padding-left: 35px;
+            color: #444;
+        }
+
+        /* 하단 서명 및 직인 영역 */
+        .footer-area {
+            margin-top: auto;
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .footer-title {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        .footer-sign {
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1.8;
+        }
+
+        .seal-anchor {
+            position: relative;
+            display: inline-block;
+        }
+
+        .custom-seal-img {
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 95px;
+            height: 95px;
+            object-fit: contain;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+            z-index: 10;
+        }
+
+        [contenteditable="true"] { outline: none; }
+        [contenteditable="true"]:hover { background-color: rgba(10, 110, 56, 0.05); }
+        [contenteditable="true"]:focus { background-color: rgba(10, 110, 56, 0.1); }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .control-bar { display: none; }
+            .document-page { box-shadow: none; padding: 0; width: 100%; }
+            [contenteditable="true"]:hover, [contenteditable="true"]:focus { background-color: transparent; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="control-bar">
+        <button class="btn btn-primary" onclick="window.print()">🖨️ 인쇄 / PDF 저장</button>
+        <button class="btn btn-success" onclick="saveToManual()">💾 변경내용 수동저장</button>
+       
+        <label class="btn btn-secondary" style="margin:0;">
+            🖼️ 로고 파일 등록 <input type="file" id="logo-uploader" accept="image/*" style="display:none;">
+        </label>
+        <label class="btn btn-secondary" style="margin:0;">
+            印 직인 파일 등록 <input type="file" id="seal-uploader" accept="image/*" style="display:none;">
+        </label>
+
+        <button class="btn btn-dark" onclick="saveAsHtml()">📥 HTML 파일 다운로드</button>
+        <button class="btn btn-danger" onclick="resetToDefault()">🔄 이 파일 초기화</button>
+       
+        <div class="status-badge" id="save-status">정상 작동 중 (실시간 내용이 이 파일 전용 공간에 저장됩니다.)</div>
+    </div>
+
+    <div class="document-page">
+       
+        <div class="top-motto" contenteditable="true">“꿈을 만드는 교회학교”(행2:17)</div>
+
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="" alt="" class="custom-logo-img" id="main-logo">
+                </td>
+                <td class="title-info-cell">
+                    <div class="title-row">
+                        <div class="church-badge">기 독 교<br>대한감리회</div>
+                        <div class="main-org-title" contenteditable="true">교회학교중앙연회연합회</div>
+                    </div>
+                   
+                    <table class="meta-info-table">
+                        <tr>
+                            <td class="meta-label">회장</td>
+                            <td class="meta-value" contenteditable="true">이진선 장로 (010-9007-9276)</td>
+                            <td class="meta-label">총무</td>
+                            <td class="meta-value" contenteditable="true">도선학 장로 (010-4997-9588)</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">서기</td>
+                            <td class="meta-value" contenteditable="true">송혜령 권사 (010-2693-4045)</td>
+                            <td class="meta-label">회계</td>
+                            <td class="meta-value" contenteditable="true">이충강 장로 (010-8178-3405)</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">E-mail</td>
+                            <td colspan="3" contenteditable="true">
+                                seonhakdo@naver.com &nbsp;&nbsp;&nbsp;&nbsp;<b>계좌번호 :</b> 카카오뱅크 3333-33-3142892 (예금주: 이충강)
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <div class="past-presidents-bar">
+            역대회장 : <span contenteditable="true">임성택 &nbsp; 김규석 &nbsp; 김정수 &nbsp; 오인영 &nbsp; 손봉규 &nbsp; 박종민 &nbsp; 정진섭 &nbsp; 정석성 &nbsp; 오관용</span>
+        </div>
+
+        <div class="main-container">
+           
+            <div class="sidebar-zone">
+                <table class="sidebar-table" contenteditable="true">
+                    <tr><td class="pos-label">직전회장</td><td class="name-value">최경순 장로</td></tr>
+                    <tr><td class="pos-label">회장</td><td class="name-value">이진선 장로</td></tr>
+                    <tr><td class="pos-label">기획부회장</td><td class="name-value">박은수 장로</td></tr>
+                    <tr><td class="pos-label">운영부회장</td><td class="name-value">박의서 장로</td></tr>
+                    <tr><td class="pos-label">선교부회장</td><td class="name-value">박종철 장로</td></tr>
+                    <tr><td class="pos-label">교육부회장</td><td class="name-value">박원용 장로</td></tr>
+                    <tr><td class="pos-label">문화부회장</td><td class="name-value">이현자 장로</td></tr>
+                    <tr><td class="pos-label">조직부회장</td><td class="name-value">양경모 장로</td></tr>
+                    <tr><td class="pos-label">체육부회장</td><td class="name-value">고영산 장로</td></tr>
+                    <tr><td class="pos-label">홍보부회장</td><td class="name-value">이시흔 장로</td></tr>
+                    <tr><td class="pos-label">봉사부회장</td><td class="name-value">이진란 권사</td></tr>
+                    <tr><td class="pos-label">친교부회장</td><td class="name-value">이창재 장로</td></tr>
+                    <tr><td class="pos-label">사업부회장</td><td class="name-value">정재훈 권사</td></tr>
+                    <tr><td class="pos-label">총무</td><td class="name-value">도선학 장로</td></tr>
+                    <tr><td class="pos-label">서기</td><td class="name-value">송혜령 권사</td></tr>
+                    <tr><td class="pos-label">회계</td><td class="name-value">이충강 장로</td></tr>
+                    <tr><td class="pos-label">부총무</td><td class="name-value">김흥의 권사</td></tr>
+                    <tr><td class="pos-label">부서기</td><td class="name-value">김영순 권사</td></tr>
+                    <tr><td class="pos-label">부회계</td><td class="name-value">한용주 장로</td></tr>
+                </table>
+
+                <div class="sidebar-section-title">지 방 회 장</div>
+               
+                <table class="sidebar-table" contenteditable="true">
+                    <tr><td class="pos-label">가평</td><td class="name-value">-</td></tr>
+                    <tr><td class="pos-label">광주동</td><td class="name-value">김희복 장로</td></tr>
+                    <tr><td class="pos-label">광주하남</td><td class="name-value">최미영 장로</td></tr>
+                    <tr><td class="pos-label">구리</td><td class="name-value">이규용 장로</td></tr>
+                    <tr><td class="pos-label">남양주</td><td class="name-value">이두희 장로</td></tr>
+                    <tr><td class="pos-label">동두천</td><td class="name-value">박원용 장로</td></tr>
+                    <tr><td class="pos-label">분당</td><td class="name-value">-</td></tr>
+                    <tr><td class="pos-label">성남</td><td class="name-value">송창국 장로</td></tr>
+                    <tr><td class="pos-label">성남동</td><td class="name-value">류재명 장로</td></tr>
+                    <tr><td class="pos-label">양주</td><td class="name-value">이금우 장로</td></tr>
+                    <tr><td class="pos-label">양평</td><td class="name-value">-</td></tr>
+                    <tr><td class="pos-label">여주동</td><td class="name-value">박유철 장로</td></tr>
+                    <tr><td class="pos-label">여주서</td><td class="name-value">유재명 장로</td></tr>
+                    <tr><td class="pos-label">연천</td><td class="name-value">정인화 장로</td></tr>
+                    <tr><td class="pos-label">의정부</td><td class="name-value">-</td></tr>
+                    <tr><td class="pos-label">의정부동</td><td class="name-value">김범수 권사</td></tr>
+                    <tr><td class="pos-label">이천남</td><td class="name-value">오정도 장로</td></tr>
+                    <tr><td class="pos-label">이천북</td><td class="name-value">김선미 권사</td></tr>
+                    <tr><td class="pos-label">이천중앙</td><td class="name-value">김민규 권사</td></tr>
+                    <tr><td class="pos-label">포천</td><td class="name-value">양영호 권사</td></tr>
+                </table>
+
+                <div class="sidebar-section-title" style="border-top: 1px solid var(--border-green); margin-top: 5px;">감 사</div>
+                <table class="sidebar-table" contenteditable="true">
+                    <tr><td class="pos-label">감사</td><td class="name-value">신동산 장로</td></tr>
+                    <tr><td class="pos-label"></td><td class="name-value">차명희 권사</td></tr>
+                </table>
+            </div>
+
+            <div class="content-zone">
+                <div class="doc-meta">
+                    <div>문서번호 : <span contenteditable="true">교중연 2025-06호</span></div>
+                    <div>발신일자 : <span contenteditable="true">2025년 8월 2일</span></div>
+                </div>
+
+                <div class="info-line">
+                    <span class="lbl">수신 :</span>
+                    <span class="val" contenteditable="true">교회학교 중앙연회연합회 역대회장, 제12대 임원 및 지방회장, 총무 귀하</span>
+                </div>
+               
+                <div class="subject-line">
+                    <span style="font-weight: bold; min-width: 50px;">제목 :</span>
+                    <span style="font-weight: bold;" contenteditable="true">교회학교 중앙연회연합회 제3차 임원회의 안내</span>
+                </div>
+
+                <div class="letter-body" contenteditable="true">
+                    <div class="body-para">1. 하나님의 크신 은혜와 축복이 섬기시는 교회와 가정위에 충만 하시기를 기도 드립니다.</div>
+                    <div class="body-para">2. 제12대 교회학교 중앙연회연합회 제3차 임원회의를 개최하오니 교회학교 부흥과 다음세대를 위하여 역대회장님, 연회임원 및 지방회장님과 총무님, 각 부·차장님께서는 바쁘시겠지만 시간을 내시어 꼭 참석하여 주시기 바랍니다.</div>
+                </div>
+
+                <div class="agenda-box">
+                    <div class="agenda-header">- 아 래 -</div>
+                    <div contenteditable="true">
+                        <div class="agenda-row">○ 일 시 : 2025년 9월 6일(토) 오후 4시</div>
+                        <div class="agenda-row">○ 장 소 : 광주하남지방 주님의교회 (최기혁 목사 시무)</div>
+                        <div class="agenda-sub-row">주소 : 하남시 대청로116번길 21</div>
+                        <div class="agenda-row" style="margin-top: 12px;">○ 주요 안건</div>
+                        <div class="agenda-sub-row">- 임원수련회 결과 보고</div>
+                        <div class="agenda-sub-item agenda-sub-row">- 비전교회 여름성경학교 지원 결과 보고</div>
+                        <div class="agenda-sub-item agenda-sub-row">- 제21회 중앙연회 교사대회 진행 보고</div>
+                        <div class="agenda-sub-row" style="color: #666; padding-left: 50px;">* 모범교사 추천</div>
+                        <div class="agenda-sub-item agenda-sub-row">- 제19회 교사 전국대회</div>
+                        <div class="agenda-sub-row" style="color: #666; padding-left: 50px;">* 25년 이상 근속교사 추천</div>
+                        <div class="agenda-sub-item agenda-sub-row">- 제16회 전국 성경골든벨 대회</div>
+                        <div class="agenda-sub-item agenda-sub-row">- 기타 안건</div>
+                    </div>
+                </div>
+
+                <div class="footer-area">
+                    <div class="footer-title">교회학교중앙연회연합회</div>
+                    <div class="footer-sign">
+                        <span class="seal-anchor">
+                            회장 &nbsp;이진선 장로
+                            <img src="" alt="" class="custom-seal-img" id="main-seal">
+                        </span><br>
+                        총무 &nbsp;도선학 장로
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 현재 파일의 고유 경로를 혼합하여 다른 파일과 저장 공간이 절대 겹치지 않게 만듭니다.
+        const FILE_ID = window.location.pathname;
+        const STORAGE_KEY = 'church_doc_content_' + FILE_ID;
+        const LOGO_KEY = 'church_global_logo_base64';  // 이미지들은 컴퓨터 전체에서 공유 가능하도록 글로벌 키 유지
+        const SEAL_KEY = 'church_global_seal_base64';
+       
+        const docPage = document.querySelector('.document-page');
+        const statusBadge = document.getElementById('save-status');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. 이 파일 전용으로 저장된 텍스트가 있다면 복원
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                docPage.innerHTML = savedData;
+            }
+
+            // 2. 이미지 유효성 검사 및 로드
+            refreshImages();
+
+            // 3. 실시간 변경내용 자동 저장 활성화
+            docPage.addEventListener('input', () => {
+                saveCurrentState();
+            });
+        });
+
+        // 이미지를 안전하게 동기화하고 유지하는 함수
+        function refreshImages() {
+            const savedLogo = localStorage.getItem(LOGO_KEY);
+            const currentLogo = document.getElementById('main-logo');
+            if (currentLogo) {
+                if (savedLogo) {
+                    currentLogo.src = savedLogo;
+                } else if (!currentLogo.src || currentLogo.src === window.location.href || currentLogo.getAttribute('src') === "") {
+                    currentLogo.src = "https://docs.google.com/uc?id=1GPFmBEMr-U_dadFiKjZhRPAdddDNOY9Z";
+                }
+            }
+
+            const savedSeal = localStorage.getItem(SEAL_KEY);
+            const currentSeal = document.getElementById('main-seal');
+            if (currentSeal) {
+                if (savedSeal) {
+                    currentSeal.src = savedSeal;
+                } else if (!currentSeal.src || currentSeal.src === window.location.href || currentSeal.getAttribute('src') === "") {
+                    currentSeal.src = "https://docs.google.com/uc?id=1gP8qEm0sYRstCP7D-X1pL3bk83mUZwto";
+                }
+            }
+        }
+
+        // 현재 페이지의 HTML 상태를 완벽히 캡처하여 저장
+        function saveCurrentState() {
+            localStorage.setItem(STORAGE_KEY, docPage.innerHTML);
+            showStatus('⚡ 실시간 내용이 이 파일에만 안전하게 자동 저장되었습니다.', '#1565C0', '#E3F2FD');
+        }
+
+        // 로고 이미지 파일 등록
+        document.getElementById('logo-uploader').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64 = event.target.result;
+                    localStorage.setItem(LOGO_KEY, base64);
+                    const currentLogo = document.getElementById('main-logo');
+                    if (currentLogo) currentLogo.src = base64;
+                    saveCurrentState();
+                    showStatus('🖼️ 로고 이미지가 변경 및 박제되었습니다!', '#2E7D32', '#E8F5E9');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 직인 이미지 파일 등록
+        document.getElementById('seal-uploader').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64 = event.target.result;
+                    localStorage.setItem(SEAL_KEY, base64);
+                    const currentSeal = document.getElementById('main-seal');
+                    if (currentSeal) currentSeal.src = base64;
+                    saveCurrentState();
+                    showStatus('印 투명 직인이 변경 및 박제되었습니다!', '#2E7D32', '#E8F5E9');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function showStatus(text, color, bgColor) {
+            statusBadge.innerText = text;
+            statusBadge.style.color = color;
+            statusBadge.style.backgroundColor = bgColor;
+        }
+
+        function saveToManual() {
+            saveCurrentState();
+            showStatus('💾 현재 문서 내용 전면 수동 저장 완료!', '#2E7D32', '#E8F5E9');
+            alert('현재 문서 상태가 안전하게 저장되었습니다.\n다른 파일과 엉키지 않는 전용 저장 공간이 적용되었습니다.');
+        }
+
+        function resetToDefault() {
+            if (confirm('⚠️ 이 파일에 저장된 수정 내역을 지우고 원본 템플릿으로 되돌리시겠습니까?\n(로고와 직인 이미지는 유지됩니다)')) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+
+        function saveAsHtml() {
+            // 다운로드 직전 최신 상태 강제 동기화
+            saveCurrentState();
+           
+            const clonedDoc = document.documentElement.cloneNode(true);
+            clonedDoc.querySelector('.document-page').innerHTML = docPage.innerHTML;
+           
+            const currentContent = clonedDoc.outerHTML;
+            const blob = new Blob([currentContent], { type: "text/html;charset=utf-8" });
+            const today = new Date();
+            const dateStr = today.getFullYear() + ('0' + (today.getMonth() + 1)).slice(-2) + ('0' + today.getDate()).slice(-2);
+           
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `교회학교_공문_최종완성본_${dateStr}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
