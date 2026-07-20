@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>금전출납부 웹앱</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        #login-screen, #app-screen { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        #app-screen { display: none; }
+        .tab-content { display: none; margin-top: 20px; }
+        .active { display: block; }
+       
+        /* 탭 버튼 배경색 및 글씨색 조정 (가독성 향상) */
+        .btn-tab1 { background-color: #a8dadc !important; color: black; }
+        .btn-tab2 { background-color: #fdfd96 !important; color: black; } /* 밝은 노란색 */
+        .btn-tab3 { background-color: #ffb7b2 !important; color: black; } /* 밝은 분홍색 */
+       
+        nav button { padding: 10px 15px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; }
+        button { padding: 8px 12px; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 4px; }
+       
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 5px 8px; text-align: center; font-size: 14px; }
+        th { background-color: #f8f8f8; }
+        input, select { padding: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <h2>비밀번호를 입력하세요</h2>
+    <input type="password" id="password">
+    <button onclick="checkPassword()" style="background-color: #2196F3;">확인</button>
+</div>
+
+<div id="app-screen">
+    <nav>
+        <button class="btn-tab1" onclick="showTab('tab1')">금전출납부</button>
+        <button class="btn-tab2" onclick="showTab('tab2')">회계보고서</button>
+        <button class="btn-tab3" onclick="showTab('tab3')">상세내역</button>
+        <button onclick="resetData()" style="background-color: #f44336;">데이터초기화</button>
+    </nav>
+
+    <!-- 1. 금전출납부 -->
+    <div id="tab1" class="tab-content active">
+        <h2>금전출납부</h2>
+        <input type="hidden" id="editId">
+        <input type="date" id="dateInput">
+        <select id="categoryInput">
+            <option value="등록금">등록금</option>
+            <option value="예배헌금">예배헌금</option>
+            <option value="선물경품비">선물경품비</option>
+        </select>
+        <input type="text" id="memoInput" placeholder="내역">
+        <input type="number" id="incomeInput" placeholder="수입">
+        <input type="number" id="expenseInput" placeholder="지출">
+        <button id="addBtn" onclick="saveData()">추가</button>
+        <table id="mainTable">
+            <thead>
+                <tr><th>일자</th><th>항목</th><th>내역</th><th>수입</th><th>지출</th><th>잔액</th><th>관리</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- 2. 회계보고서 -->
+    <div id="tab2" class="tab-content">
+        <h2>회계보고서</h2>
+        <div>
+            조회기간: <input type="date" id="startDate"> ~ <input type="date" id="endDate">
+            <button onclick="updateUI()">조회</button>
+            <button onclick="window.print()">PDF 저장 및 출력</button>
+        </div>
+        <table id="reportTable">
+            <thead>
+                <tr><th colspan="2">수입부</th><th colspan="2">지출부</th></tr>
+                <tr><th>항목</th><th>수입합계액</th><th>항목</th><th>지출액</th></tr>
+            </thead>
+            <tbody id="reportTbody"></tbody>
+            <tfoot>
+                <tr id="reportFooter" style="font-weight:bold;"></tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- 3. 상세내역 -->
+    <div id="tab3" class="tab-content">
+        <h2>상세내역</h2>
+        <button onclick="window.print()">PDF 저장 및 출력</button>
+        <table id="detailTable">
+            <thead><tr><th>항목</th><th>내역</th><th>수입</th><th>지출</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let data = JSON.parse(localStorage.getItem('cashData')) || [];
+    const fmt = (num) => num.toLocaleString();
+
+    function checkPassword() {
+        if (document.getElementById('password').value === '0524') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            updateUI();
+        } else { alert('비밀번호가 틀렸습니다.'); }
+    }
+
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function saveData() {
+        const id = document.getElementById('editId').value;
+        const entry = {
+            id: id ? parseInt(id) : Date.now(),
+            date: document.getElementById('dateInput').value,
+            category: document.getElementById('categoryInput').value,
+            memo: document.getElementById('memoInput').value,
+            income: parseInt(document.getElementById('incomeInput').value) || 0,
+            expense: parseInt(document.getElementById('expenseInput').value) || 0
+        };
+
+        if (id) {
+            data = data.map(item => item.id == id ? entry : item);
+            document.getElementById('addBtn').innerText = '추가';
+            document.getElementById('editId').value = '';
+        } else {
+            data.push(entry);
+        }
+        localStorage.setItem('cashData', JSON.stringify(data));
+        updateUI();
+    }
+
+    function editData(id) {
+        const item = data.find(i => i.id == id);
+        document.getElementById('editId').value = item.id;
+        document.getElementById('dateInput').value = item.date;
+        document.getElementById('categoryInput').value = item.category;
+        document.getElementById('memoInput').value = item.memo;
+        document.getElementById('incomeInput').value = item.income;
+        document.getElementById('expenseInput').value = item.expense;
+        document.getElementById('addBtn').innerText = '수정완료';
+    }
+
+    function deleteData(id) {
+        if(confirm('삭제하시겠습니까?')) {
+            data = data.filter(item => item.id !== id);
+            localStorage.setItem('cashData', JSON.stringify(data));
+            updateUI();
+        }
+    }
+
+    function resetData() {
+        if(confirm('데이터를 초기화하시겠습니까?')) {
+            data = [];
+            localStorage.setItem('cashData', JSON.stringify(data));
+            updateUI();
+        }
+    }
+
+    function updateUI() {
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        const filtered = (start && end) ? data.filter(i => i.date >= start && i.date <= end) : data;
+
+        let tbody = document.querySelector('#mainTable tbody');
+        tbody.innerHTML = '';
+        let balance = 0;
+        data.forEach(item => {
+            balance += (item.income - item.expense);
+            tbody.innerHTML += `<tr><td>${item.date}</td><td>${item.category}</td><td>${item.memo}</td><td>${fmt(item.income)}</td><td>${fmt(item.expense)}</td><td>${fmt(balance)}</td>
+            <td>
+                <button onclick="editData(${item.id})" style="background-color:#ff9800; padding: 2px 6px;">수정</button>
+                <button onclick="deleteData(${item.id})" style="background-color:#f44336; padding: 2px 6px;">삭제</button>
+            </td></tr>`;
+        });
+
+        let reportTbody = document.getElementById('reportTbody');
+        reportTbody.innerHTML = '';
+        let incItems = {}, expItems = {}, tInc = 0, tExp = 0;
+       
+        filtered.forEach(item => {
+            if(item.income > 0) { incItems[item.category] = (incItems[item.category] || 0) + item.income; tInc += item.income; }
+            if(item.expense > 0) { expItems[item.category] = (expItems[item.category] || 0) + item.expense; tExp += item.expense; }
+        });
+
+        let keys = Array.from(new Set([...Object.keys(incItems), ...Object.keys(expItems)]));
+        keys.forEach(key => {
+            reportTbody.innerHTML += `<tr><td>${key}</td><td>${fmt(incItems[key] || 0)}</td><td>${key}</td><td>${fmt(expItems[key] || 0)}</td></tr>`;
+        });
+        document.getElementById('reportFooter').innerHTML = `<td>합계액</td><td>${fmt(tInc)}</td><td>합계액</td><td>${fmt(tExp)}</td>`;
+
+        let detailTbody = document.querySelector('#detailTable tbody');
+        detailTbody.innerHTML = '';
+        filtered.forEach(item => {
+            detailTbody.innerHTML += `<tr><td>${item.category}</td><td>${item.memo}</td><td>${fmt(item.income)}</td><td>${fmt(item.expense)}</td></tr>`;
+        });
+    }
+</script>
+</body>
+</html>
